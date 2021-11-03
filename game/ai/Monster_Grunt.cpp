@@ -2,9 +2,11 @@
 #include "../../idlib/precompiled.h"
 #pragma hdrstop
 
+#include "Monster.h"
 #include "../Game_local.h"
+#include "AI.h"
 
-class rvMonsterGrunt : public idAI {
+class rvMonsterGrunt : public Monster {
 public:
 
 	CLASS_PROTOTYPE( rvMonsterGrunt );
@@ -16,6 +18,9 @@ public:
 	void				Restore					( idRestoreGame *savefile );
 	
 	virtual void		AdjustHealthByDamage	( int damage );
+
+	virtual void		Think(void);
+	virtual int			AI_Choice(void);
 
 protected:
 
@@ -32,6 +37,7 @@ private:
 	int					standingMeleeNoAttackTime;
 	int					rageThreshold;
 
+
 	void				RageStart			( void );
 	void				RageStop			( void );
 	
@@ -43,7 +49,7 @@ private:
 	CLASS_STATES_PROTOTYPE ( rvMonsterGrunt );
 };
 
-CLASS_DECLARATION( idAI, rvMonsterGrunt )
+CLASS_DECLARATION( Monster, rvMonsterGrunt )
 END_CLASS
 
 /*
@@ -61,6 +67,22 @@ rvMonsterGrunt::Spawn
 ================
 */
 void rvMonsterGrunt::Spawn ( void ) {
+
+	/* << NEW SPAWN INFO >> */
+	if (spawnArgs.GetBool("is_friendly")) {
+		isFriendly = 1;
+	}
+	if (spawnArgs.GetInt("level")){
+		level = spawnArgs.GetInt("level");
+		expToNext = ceil(5 * pow(1.05, (1 + level)) - 2);
+		maxHP = round(8 * pow(1.08, (1 + 0.56 * level)) + 15);
+		HP = maxHP;
+		str = round(12 * pow(1.07, (1 + 0.5 * level)) + 3);
+		stk = round(13 * pow(1.03, (1 + 1.2 * level)) + 5);
+		spd = round(10 * pow(1.01, (1 + 1.5 * level)) + 2);
+	}
+
+	/* << OLD SPAWN INFO >>
 	rageThreshold = spawnArgs.GetInt ( "health_rageThreshold" );
 
 	// Custom actions
@@ -72,6 +94,7 @@ void rvMonsterGrunt::Spawn ( void ) {
 	if ( spawnArgs.GetBool ( "preinject" ) ) {
 		RageStart ( );
 	}	
+	*/
 }
 
 /*
@@ -232,6 +255,29 @@ void rvMonsterGrunt::AdjustHealthByDamage ( int damage ) {
 	return idAI::AdjustHealthByDamage ( damage );
 }
 
+void rvMonsterGrunt::Think(void)
+{
+	if (canAttack) {
+		if (isFriendly == 0) {
+
+		}
+	}
+}
+int rvMonsterGrunt::AI_Choice(void) {
+	while (true) {
+		int roll = rand() % 100;
+		if (roll < 50 || level < 5)
+			return Attack_AI();
+		if (roll < 70 && level >= 5)
+			return Skill_PlasmaPunch();
+		if (roll < 75 && level >= 10)
+			return Skill_MegaPound();
+		if (roll < 95 && level >= 17)
+			return Skill_Roar();
+		if (level >= 28)
+			return Skill_BodySlam();
+	}
+}
 /*
 ===============================================================================
 
